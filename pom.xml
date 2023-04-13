@@ -31,12 +31,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-logging</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -49,12 +43,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-logging</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -83,17 +71,6 @@
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>it.ozimov</groupId>
-			<artifactId>embedded-redis</artifactId>
-			<version>0.7.3</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-simple</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -146,6 +123,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<classifier>${repackage.classifier}</classifier>
 					<image>
 						<builder>paketobuildpacks/builder:tiny</builder>
 						<env>
@@ -169,9 +147,15 @@
 			</plugin>
 		</plugins>
 	</build>
+	<properties>
+		<repackage.classifier />
+	</properties>
 	<profiles>
 		<profile>
 			<id>native</id>
+			<properties>
+				<repackage.classifier>exec</repackage.classifier>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>
@@ -181,17 +165,21 @@
 						<executions>
 							<execution>
 								<id>build-native</id>
+								<phase>package</phase>
 								<goals>
 									<goal>build</goal>
 								</goals>
-								<!-- <configuration>
-									<buildArgs>
-										-/-initialize-at-build-time=org.slf4j.simple.SimpleLogger,org.slf4j.impl.SimpleLogger
-									</buildArgs>
-								</configuration> -->
-								<phase>package</phase>
+								<!-- <configuration> <buildArgs> -/-initialize-at-build-time=org.slf4j.simple.SimpleLogger,org.slf4j.impl.SimpleLogger 
+									</buildArgs> </configuration> -->
 							</execution>
 						</executions>
+						<configuration>
+							<imageName>${binary-name}</imageName>
+							<skip>${skip-native-build}</skip>
+							<buildArgs>
+								<buildArg>-H:+ReportExceptionStackTraces</buildArg>
+							</buildArgs>
+						</configuration>
 					</plugin>
 					<plugin>
 						<groupId>org.springframework.boot</groupId>
