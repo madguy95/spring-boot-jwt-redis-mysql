@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.1</version>
+		<version>3.0.6-SNAPSHOT</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.satoru</groupId>
@@ -15,14 +15,6 @@
 	<name>spring-boot-security-jwt</name>
 	<description>Demo project for Spring Boot Security - JWT</description>
 
-	<repositories>
-
-		<repository>
-			<id>snapshots</id>
-			<name>Local Nexus</name>
-			<url>https://repo.spring.io/release</url>
-		</repository>
-	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -49,8 +41,9 @@
 			<artifactId>jedis</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 
 		<dependency>
@@ -68,105 +61,107 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<!-- Thanks for using https://jar-download.com -->
-		<dependency>
-			<groupId>org.springframework.experimental</groupId>
-			<artifactId>spring-native</artifactId>
-			<version>0.12.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.experimental</groupId>
-			<artifactId>spring-aot</artifactId>
-			<version>0.12.1</version>
-		</dependency>
 	</dependencies>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>snapshots</id>
-			<name>Local Nexus</name>
-			<url>https://repo.spring.io/release</url>
-		</pluginRepository>
-	</pluginRepositories>
 	<build>
-
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<classifier>${repackage.classifier}</classifier>
-					<image>
-						<builder>paketobuildpacks/builder:tiny</builder>
-						<env>
-							<BP_NATIVE_IMAGE>true</BP_NATIVE_IMAGE>
-						</env>
-					</image>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.springframework.experimental</groupId>
-				<artifactId>spring-aot-maven-plugin</artifactId>
-				<version>0.12.1</version>
 				<executions>
 					<execution>
-						<id>generate</id>
+						<id>repackage</id>
 						<goals>
-							<goal>generate</goal>
+							<goal>repackage</goal>
 						</goals>
 					</execution>
 				</executions>
 			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.graalvm.buildtools</groupId>
+					<artifactId>native-maven-plugin</artifactId>
+					<configuration>
+						<!-- Mockito is not supported -->
+						<skipNativeTests>true</skipNativeTests>
+					</configuration>
+				</plugin>
+				<!-- We can compile the application in AOT mode but not producing a native 
+					image -->
+				<!-- If we active this plugin -->
+				<!-- and deactive all the pom native component -->
+				<!-- <plugin> <groupId>org.springframework.boot</groupId> <artifactId>spring-boot-maven-plugin</artifactId> 
+					<configuration> <jvmArguments> -agentlib:native-image-agent=config-output-dir=target/native-image 
+					</jvmArguments> <systemPropertyVariables> <springAot>true</springAot> </systemPropertyVariables> 
+					</configuration> </plugin> -->
+			</plugins>
+		</pluginManagement>
 	</build>
-	<properties>
-		<repackage.classifier />
-	</properties>
+
 	<profiles>
+		<!-- The native profile is already defined by the parent POM. -->
+		<!-- To use this plugin, we need GraalVM (located under $GRAALVM_HOME) 
+			and -->
+		<!-- native-builder (located in the $PATH) -->
 		<profile>
 			<id>native</id>
-			<properties>
-				<repackage.classifier>exec</repackage.classifier>
-			</properties>
 			<build>
 				<plugins>
 					<plugin>
 						<groupId>org.graalvm.buildtools</groupId>
 						<artifactId>native-maven-plugin</artifactId>
-						<version>0.9.17</version>
 						<executions>
 							<execution>
 								<id>build-native</id>
-								<phase>package</phase>
 								<goals>
-									<goal>build</goal>
+									<goal>compile-no-fork</goal>
 								</goals>
-								<!-- <configuration> <buildArgs> -/-initialize-at-build-time=org.slf4j.simple.SimpleLogger,org.slf4j.impl.SimpleLogger 
-									</buildArgs> </configuration> -->
+								<phase>package</phase>
 							</execution>
 						</executions>
-						<configuration>
-							<imageName>${binary-name}</imageName>
-							<skip>${skip-native-build}</skip>
-							<buildArgs>
-								<buildArg>-H:+ReportExceptionStackTraces</buildArg>
-							</buildArgs>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.springframework.boot</groupId>
-						<artifactId>spring-boot-maven-plugin</artifactId>
-						<configuration>
-							<classifier>exec</classifier>
-						</configuration>
 					</plugin>
 				</plugins>
 			</build>
 		</profile>
 	</profiles>
+	<repositories>
+		<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</pluginRepository>
+		<pluginRepository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
+	<properties>
+		<java.version>17</java.version>
+	</properties>
 </project>

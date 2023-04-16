@@ -56,9 +56,9 @@ public class WebSecurityConfig {
 		.authenticationEntryPoint(unauthorizedHandler).and()
 				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				.and().authorizeRequests()
-				.antMatchers("/api/auth/**").permitAll()
-				.antMatchers("/api/test/**").permitAll()
-				.antMatchers("/news/**")
+				.requestMatchers("/api/auth/**").permitAll()
+				.requestMatchers("/api/test/**").permitAll()
+				.requestMatchers("/news/**")
 				.permitAll().anyRequest().authenticated();
 
 		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
