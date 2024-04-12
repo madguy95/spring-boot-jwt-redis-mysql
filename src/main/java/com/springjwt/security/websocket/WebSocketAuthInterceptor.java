@@ -30,7 +30,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor =
                 MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
+        if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) { // Authenticate with connect message request
             String accessToken = jwtUtils.parseJwt(accessor);
             if (accessToken != null) {
                 String username = jwtUtils.getUserNameFromJwtToken(accessToken);

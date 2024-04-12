@@ -9,7 +9,7 @@
 	  <script>
 		var socket = new SockJS('http://localhost:8080/news');
 		stompClient = Stomp.over(socket);
-		stompClient.connect({"Authorization": "Bearer " +"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJuYW1lIjoiYWRtaW4iLCJoYXNoIjoiMzgxYzY2YTRiZjYzZDhmZThlMTc1OGY4NzNlMDA1OWEiLCJpYXQiOjE3MTI4MDcwMzQsImV4cCI6MTcxMjg5MzQzNH0.V8eH4M0o9m628T2kR-BIpKhTiCeOles0-6TZZ1vNZjU"}, function (frame) {
+		stompClient.connect({"Authorization": "Bearer " +"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJuYW1lIjoiYWRtaW4iLCJoYXNoIjoiNmY0ZjNmMjY5ZWVmODBiMDBkYWMzZDVhY2U3MTc0YTkiLCJpYXQiOjE3MTI4OTYwOTksImV4cCI6MTcxMjk4MjQ5OX0.PrkHuxzfFSpB2yJnJ7HqdH35hoZ9SdBco3kEEOEUx78"}, function (frame) {
 			console.log('Connected: ' + frame);
 			stompClient.subscribe('/topic/greetings', function (greeting) {
 				console.log(JSON.parse(greeting.body).content);

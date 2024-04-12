@@ -5,12 +5,8 @@
  */
 package com.springjwt.security.services;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -19,14 +15,9 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
-import lombok.extern.slf4j.Slf4j;
-
-/**
- *
- * @author Narayan <me@ngopal.com.np>
- */
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Service("redisService")
 @Slf4j
@@ -36,20 +27,14 @@ public class RedisService {
     private ObjectMapper mapper;
 
     @Autowired
-    private RedisTemplate< String, Object> template;
+    private RedisTemplate<String, Object> template;
 
     public synchronized List<String> getKeys(final String pattern) {
         template.setHashValueSerializer(new StringRedisSerializer());
         template.setValueSerializer(new StringRedisSerializer());
         Set<String> redisKeys = template.keys(pattern);
         // Store the keys in a List
-        List<String> keysList = new ArrayList<>();
-        Iterator<String> it = redisKeys.iterator();
-        while (it.hasNext()) {
-            String data = it.next();
-            keysList.add(data);
-        }
-        return keysList;
+        return new ArrayList<>(Optional.ofNullable(redisKeys).orElse(Collections.emptySet()));
     }
 
     public synchronized Object getValue(final String key) {
@@ -59,7 +44,7 @@ public class RedisService {
         return template.opsForValue().get(key);
     }
 
-    public synchronized Object getValue(final String key, Class clazz) {
+    public synchronized Object getValue(final String key, Class<?> clazz) {
         template.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
         template.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
 
@@ -100,9 +85,9 @@ public class RedisService {
         // set a expire for a message
         template.expire(key, timeout, unit);
     }
-    
+
     public boolean removeKey(String key) {
-    	return template.delete(key);
+        return Boolean.TRUE.equals(template.delete(key));
     }
 
 }

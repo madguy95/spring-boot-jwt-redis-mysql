@@ -3,60 +3,27 @@ spring-boot-jwt-redis-mysql websocket with sockjs
 
 Based on:
 
-* [springboot](https://spring.io/projects/spring-boot)
+* [springboot3](https://spring.io/projects/spring-boot)
 * [jwt](https://bezkoder.com/angular-spring-boot-jwt-auth/)
 * [redis](https://redis.io/)
 * [mysql](https://dev.mysql.com/doc/)
 * [PostgreSQL](https://www.postgresql.org/docs/)
 * [Sockjs](https://spring.io/guides/gs/messaging-stomp-websocket/)
 
-## Dependency
-– If you want to use PostgreSQL:
-```xml
-<dependency>
-  <groupId>org.postgresql</groupId>
-  <artifactId>postgresql</artifactId>
-  <scope>runtime</scope>
-</dependency>
-```
-– or MySQL:
-```xml
-<dependency>
-  <groupId>mysql</groupId>
-  <artifactId>mysql-connector-java</artifactId>
-  <scope>runtime</scope>
-</dependency>
-```
 ## Configure Spring Datasource, JPA, App properties
 Open `src/main/resources/application.properties`
-- For PostgreSQL:
-```
-spring.datasource.url= jdbc:postgresql://localhost:5432/testdb
-spring.datasource.username= postgres
-spring.datasource.password= 123
-
-spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation= true
-spring.jpa.properties.hibernate.dialect= org.hibernate.dialect.PostgreSQLDialect
-
-# Hibernate ddl auto (create, create-drop, validate, update)
-spring.jpa.hibernate.ddl-auto= update
-
-# App Properties
-satoru.app.jwtSecret= satoruSecretKey
-satoru.app.jwtExpirationMs= 86400000
-```
-- For MySQL
+- For MySQL 8
 ```
 spring.datasource.url= jdbc:mysql://localhost:3306/testdb?useSSL=false
 spring.datasource.username= root
 spring.datasource.password= 123456
-
-spring.jpa.properties.hibernate.dialect= org.hibernate.dialect.MySQL5InnoDBDialect
-spring.jpa.hibernate.ddl-auto= update
-
-# App Properties
-satoru.app.jwtSecret= satoruSecretKey
-satoru.app.jwtExpirationMs= 86400000
+```
+- For Redis
+```
+spring.data.redis.database=0
+spring.data.redis.host=localhost
+spring.data.redis.port=16379
+spring.data.redis.password=mypass
 ```
 ## Run Spring Boot application
 ```
