@@ -2,8 +2,8 @@ package com.springjwt.security.redis;
 
 import java.util.Optional;
 
-import javax.annotation.PreDestroy;
 
+import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;

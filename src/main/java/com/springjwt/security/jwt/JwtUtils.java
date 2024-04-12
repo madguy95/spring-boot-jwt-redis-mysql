@@ -1,109 +1,140 @@
 package com.springjwt.security.jwt;
 
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
+import com.springjwt.security.services.RedisService;
+import com.springjwt.security.services.UserDetailsImpl;
+import io.jsonwebtoken.*;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
+import org.springframework.util.StringUtils;
 
-import com.springjwt.security.services.RedisService;
-import com.springjwt.security.services.UserDetailsImpl;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.SignatureException;
-import io.jsonwebtoken.UnsupportedJwtException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Base64;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class JwtUtils {
-	private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-	@Value("${satoru.app.jwtSecret}")
-	private String jwtSecret;
+    private SecretKey SECRET_KEY;
 
-	@Value("${satoru.app.jwtExpirationMs}")
-	private int jwtExpirationMs;
+    @Value("${satoru.app.jwtSecret}")
+    private String jwtSecret;
 
-	@Autowired
-	private RedisService service;
+    @Value("${satoru.app.jwtExpirationMs}")
+    private int jwtExpirationMs;
 
-	public String generateJwtToken(Authentication authentication) {
+    @Autowired
+    private RedisService service;
 
-		UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-		Claims claims = Jwts.claims();
-		String username = userPrincipal.getUsername();
-		String hash = getHash(username);
-		claims.put("username", username);
-		claims.put("hash", hash);
-		return Jwts.builder()
-				.setSubject((userPrincipal.getUsername()))
-				.setClaims(claims)
-				.setIssuedAt(new Date())
-				.setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-				.signWith(SignatureAlgorithm.HS512, jwtSecret)
-				.compact();
-	}
+    @PostConstruct
+    public void generateSignInKey() {
+        this.SECRET_KEY = new SecretKeySpec(Base64.getDecoder().decode(jwtSecret), "HmacSHA256");
+    }
 
-	public String getUserNameFromJwtToken(String token) {
-		return (String) Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().get("username");
-	}
+    public String parseJwt(Object request) {
+        String headerAuth = null;
+        if (request instanceof HttpServletRequest) {
+            headerAuth = ((HttpServletRequest) request).getHeader("Authorization");
+        }
+        if (request instanceof StompHeaderAccessor) {
+            List<String> authorization = ((StompHeaderAccessor) request).getNativeHeader("Authorization");
+            if (!CollectionUtils.isEmpty(authorization)) {
+                headerAuth = authorization.get(0);
+            }
+        }
+        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
+            return headerAuth.substring(7);
+        }
 
-	public boolean revokeToken(Authentication auth, String token) {
-		Claims claims = Jwts.claims();
-		try {
-			claims = Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
+        return headerAuth;
+    }
 
-		} catch (Exception e) {
-			return false;
-		}
+    public String generateJwtToken(Authentication authentication) {
 
-		// Valid token and now checking to see if the token is actally expired or alive
-		// by quering in redis.
-		if (claims != null && claims.containsKey("username") && claims.containsKey("hash")) {
-			String username = claims.get("username").toString();
-			String hash = claims.get("hash").toString();
-			service.setValue(String.format("%s_%s", username, hash), auth.getPrincipal(), TimeUnit.SECONDS, 3600, true);
-		}
-		return true;
-	}
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
 
-	public boolean validateJwtToken(String authToken) {
-		try {
-			Claims claims = Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken).getBody();
-			if (claims != null && claims.containsKey("username") && claims.containsKey("hash")) {
-				String username = claims.get("username").toString();
-				String hash = claims.get("hash").toString();
-				if (service.getValue(String.format("%s_%s", username, hash)) != null) {
-					logger.error("Token revoked");
-				} else {
-					return true;
-				}
-			}
-		} catch (SignatureException e) {
-			logger.error("Invalid JWT signature: {}", e.getMessage());
-		} catch (MalformedJwtException e) {
-			logger.error("Invalid JWT token: {}", e.getMessage());
-		} catch (ExpiredJwtException e) {
-			logger.error("JWT token is expired: {}", e.getMessage());
-		} catch (UnsupportedJwtException e) {
-			logger.error("JWT token is unsupported: {}", e.getMessage());
-		} catch (IllegalArgumentException e) {
-			logger.error("JWT claims string is empty: {}", e.getMessage());
-		}
+        String username = userPrincipal.getUsername();
+        String hash = getHash(username);
+        Claims claims = Jwts.claims().add("username", username).add("hash", hash).build();
+        return Jwts.builder()
+                .subject((userPrincipal.getUsername()))
+                .claims(claims)
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(SECRET_KEY)
+                .compact();
+    }
 
-		return false;
-	}
+    public String getUserNameFromJwtToken(String token) {
+        return (String) Jwts.parser().verifyWith(SECRET_KEY)
+                .build().parseSignedClaims(token).getPayload().get("username");
+    }
 
-	public String getHash(String username) {
-		return DigestUtils.md5DigestAsHex(String.format("%s_%d", username, new Date().getTime()).getBytes());
-	}
+    public boolean revokeToken(Authentication auth, String token) {
+        Claims claims;
+        LocalDateTime now = LocalDateTime.now();
+        try {
+            claims = Jwts.parser().verifyWith(SECRET_KEY)
+                    .build().parseSignedClaims(token).getPayload();
+
+        } catch (Exception e) {
+            return false;
+        }
+
+        // Valid token and now checking to see if the token is actally expired or alive
+        // by quering in redis.
+        if (claims != null && claims.containsKey("username") && claims.containsKey("hash")) {
+            String username = claims.get("username").toString();
+            String hash = claims.get("hash").toString();
+            Duration aliveTime = Duration.between(now, claims.getExpiration().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+            service.setValue(String.format("%s_%s", username, hash), auth.getPrincipal(), TimeUnit.SECONDS, aliveTime.getSeconds(), true);
+        }
+        return true;
+    }
+
+    public boolean validateJwtToken(String authToken) {
+        try {
+            Claims claims = Jwts.parser().verifyWith(SECRET_KEY)
+                    .build().parseSignedClaims(authToken).getPayload();
+            if (claims != null && claims.containsKey("username") && claims.containsKey("hash")) {
+                String username = claims.get("username").toString();
+                String hash = claims.get("hash").toString();
+                if (service.getValue(String.format("%s_%s", username, hash)) != null) {
+                    logger.error("Token revoked");
+                } else {
+                    return true;
+                }
+            }
+        } catch (MalformedJwtException e) {
+            logger.error("Invalid JWT token: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            logger.error("JWT token is expired: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            logger.error("JWT token is unsupported: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.error("JWT claims string is empty: {}", e.getMessage());
+        }
+
+        return false;
+    }
+
+    public String getHash(String username) {
+        return DigestUtils.md5DigestAsHex(String.format("%s_%d", username, new Date().getTime()).getBytes());
+    }
 
 }

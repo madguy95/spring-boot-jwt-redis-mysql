@@ -20,6 +20,6 @@ public class SocketController {
 	
 	@Scheduled(fixedRate = 1000)
 	public void scheduleFixedDelayTask() {
-		this.simpMessagingTemplate.convertAndSend("/topic/greetings", 100);  
+//		this.simpMessagingTemplate.convertAndSend("/topic/greetings", 100);
 	}
 }
