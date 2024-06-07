@@ -20,7 +20,7 @@ public class TokenController {
 	JwtUtils jwtUtils;
 	
 	@PostMapping("/revoke/{access_token}")
-	public ResponseEntity<Object> userAccess(@PathVariable("access_token") String token, Authentication auth) {
+	public ResponseEntity<?> userAccess(@PathVariable("access_token") String token, Authentication auth) {
 		return jwtUtils.revokeToken(auth, token) ? ResponseEntity.ok("success") : ResponseEntity.ok("Fail");
 	}
 }
