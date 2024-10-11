@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521:FREE
+    username: system
+    password: your_password
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  #  h2:
+  #    console:
+  #      enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        jdbc.lob.non_contextual_creation: true
+        dialect: org.hibernate.dialect.OracleDialect
+        format_sql: true
+logging:
+  level:
+    root: INFO
+    org.springframework.web: ERROR
+    org.hibernate: INFO
+    org.hibernate.orm.jdbc.bind: TRACE

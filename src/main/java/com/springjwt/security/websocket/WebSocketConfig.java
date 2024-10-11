@@ -24,8 +24,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 import java.util.List;
 
-@Configuration
-@EnableWebSocketMessageBroker
+//@Configuration
+//@EnableWebSocketMessageBroker
 //@EnableWebSocketSecurity // not use because need to disable csrf
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 

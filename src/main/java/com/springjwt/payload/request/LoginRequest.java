@@ -1,6 +1,7 @@
 package com.springjwt.payload.request;
 
 
+import com.springjwt.annotations.StrProc;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ public class LoginRequest {
     private String username;
 
     @NotBlank
+    @StrProc
     private String password;
 
 }

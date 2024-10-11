@@ -7,7 +7,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController("/api/socket")
+//@RestController("/api/socket")
 public class SocketController {
 
 	@Autowired

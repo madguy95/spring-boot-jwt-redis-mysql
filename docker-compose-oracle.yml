@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:6.2.6-alpine
+    ports:
+      - "16379:6379"
+    command: redis-server --requirepass "mypass"
+    restart: always
+#  db:
+#    image: mysql:8.0
+#    command: --default-authentication-plugin=mysql_native_password
+#    restart: always
+#    environment:
+#      MYSQL_ROOT_PASSWORD: 123456
+#      MYSQL_DATABASE: redis_jwt
+#    ports:
+#      - "3306:3306"
+  oracle-xe:
+    image: container-registry.oracle.com/database/free:latest
+    container_name: oracle
+    restart: always
+    ports:
+      - "1521:1521"
+    environment:
+      - ORACLE_PWD=your_password
+      - ORACLE_CHARACTERSET=AL32UTF8
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+
+volumes:
+  oracle_data:
