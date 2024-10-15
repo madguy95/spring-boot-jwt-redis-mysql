@@ -4,12 +4,12 @@ import com.github.javafaker.Faker;
 import com.springjwt.exception.ApiResponseFactory;
 import com.springjwt.exception.PagedApiResponse;
 import com.springjwt.models.User;
+import com.springjwt.payload.request.RequestDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +19,8 @@ import java.util.Locale;
 @RestController
 @RequestMapping("/api/test")
 public class TestController {
+	private static final Logger log = LoggerFactory.getLogger(TestController.class);
+
 	@GetMapping("/all")
 	public String allAccess() {
 		return "Public Content.";
@@ -40,6 +42,24 @@ public class TestController {
 			userList.add(user);
 		}
 		return ApiResponseFactory.pagedResponse(userList, 1, 10, userList.size());
+	}
+
+	/**
+	 * {
+	 *   "customLocalDate": "2023/10/10",
+	 *   "localDate": "2023-10-10",
+	 *   "localDateTime": "2023-10-10T13:10:00",
+	 *   "zonedDateTime": "2023-10-10T13:10:00Z"
+	 * }
+	 * @param requestDTO
+	 * @return
+	 */
+	@PostMapping("/sendDate")
+	public ResponseEntity<?> checkDateTime(@RequestBody RequestDTO requestDTO) {
+		log.info("LocalDate: {}", requestDTO.getLocalDate());
+		log.info("LocalDateTime: {}", requestDTO.getLocalDateTime());
+		log.info("ZoneDateTime: {}", requestDTO.getZonedDateTime().toString());
+		return ApiResponseFactory.success(requestDTO);
 	}
 
 	@GetMapping("/user")

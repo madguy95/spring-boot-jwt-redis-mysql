@@ -33,10 +33,10 @@ public class JwtUtils {
 
     private SecretKey SECRET_KEY;
 
-    @Value("${satoru.app.jwtSecret}")
+    @Value("${app.jwtSecret}")
     private String jwtSecret;
 
-    @Value("${satoru.app.jwtExpirationMs}")
+    @Value("${app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
     @Autowired
