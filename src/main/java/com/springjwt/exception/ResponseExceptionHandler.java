@@ -17,11 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import static com.springjwt.constants.MsgConstants.UNEXPECTED_ERROR;
+
 @ControllerAdvice
 public class ResponseExceptionHandler
         extends ResponseEntityExceptionHandler {
 
-    private static final String UNEXPECTED_ERROR = "Exception.unexpected";
+
     private final MessageSource messageSource;
 
     public ResponseExceptionHandler(MessageSource messageSource) {
@@ -39,20 +41,17 @@ public class ResponseExceptionHandler
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         List<ValidationError> validationErrors = new ArrayList<>();
-
         ex.getBindingResult().getFieldErrors().forEach(fieldError -> {
             validationErrors.add(new ValidationError(fieldError.getField(), fieldError.getDefaultMessage()));
         });
-
         ApiResponse<Object> response = new ApiResponse<>((HttpStatus) status, null, null, validationErrors);
         return new ResponseEntity<>(response, (HttpStatus) status);
     }
 
     @ExceptionHandler({AccessDeniedException.class})
-    public ResponseEntity<Object> handleAccessDeniedException(
+    public ResponseEntity<?> handleAccessDeniedException(
             Exception ex, WebRequest request) {
-        return new ResponseEntity<>(
-                "Access denied message here", HttpStatus.FORBIDDEN);
+        return ApiResponseFactory.error(HttpStatus.FORBIDDEN, "Access denied message here");
     }
 
     @ExceptionHandler(value
@@ -62,6 +61,15 @@ public class ResponseExceptionHandler
         String bodyOfResponse = "This should be application specific";
         return handleExceptionInternal(ex, bodyOfResponse,
                 new HttpHeaders(), HttpStatus.CONFLICT, request);
+    }
+
+    @ExceptionHandler(value
+            = {ValidationException.class})
+    protected ResponseEntity<Object> handleBaseException(ValidationException ex, Locale locale) {
+        List<ValidationError> validationErrors = new ArrayList<>();
+        validationErrors.add(ex.getError());
+        ApiResponse<Object> response = new ApiResponse<>(HttpStatus.BAD_REQUEST, null, null, validationErrors);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(value

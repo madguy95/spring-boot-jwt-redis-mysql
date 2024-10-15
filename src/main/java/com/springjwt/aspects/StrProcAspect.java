@@ -22,6 +22,7 @@ public class StrProcAspect {
 
     /**
      * Pointcut expression to match all methods in the specified package.
+     * Currently, Can't aplly to package that contain filter class
      */
     @Pointcut("execution(* com.springjwt.controllers..*(..))")
     public void applicationLayer() {

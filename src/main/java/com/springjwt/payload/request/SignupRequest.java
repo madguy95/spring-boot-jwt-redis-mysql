@@ -12,6 +12,8 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 public class SignupRequest {
+    public static final String USERNAME = "userName";
+    public static final String EMAIL = "email";
     @NotBlank
     @Size(min = 3, max = 20)
     private String username;
